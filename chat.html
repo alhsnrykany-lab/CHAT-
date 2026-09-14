@@ -1,0 +1,337 @@
+npx create-expo-app ChatRobotApp
+cd ChatRobotApp
+npm install @react-three/fiber @react-three/drei expo-gl three react-native-gifted-chat
+npm install @react-navigation/native @react-navigation/stack
+// TeacherLogic.js
+// Text processing and routing module for the educational robot
+
+export const analyzeUserMessage = (message) => {
+  const lowerCaseMessage = message.toLowerCase();
+  
+  // Grading and Error Handling Module
+  if (lowerCaseMessage.includes("don't know") || lowerCaseMessage.includes("mistake") || lowerCaseMessage.includes("wrong")) {
+    return "You made a mistake this time, but that's completely fine. Programming and learning require patience. Review the lesson carefully on the whiteboard, memorize it, and come back to me so we can try again.";
+  }
+
+  // Programming Module
+  if (lowerCaseMessage.includes("programming") || lowerCaseMessage.includes("code") || lowerCaseMessage.includes("coding")) {
+    return "Welcome to the world of programming! Today, I will teach you how to build an app from scratch using React Native. Look at the screen in front of me, we will start by declaring variables.";
+  }
+
+  // Smartphone & Tech Module
+  if (lowerCaseMessage.includes("phone") || lowerCaseMessage.includes("smartphone")) {
+    return "Smartphones are basically mini-computers. I will explain how microprocessors (like Snapdragon and Apple Silicon) work and how apps communicate with the operating system.";
+  }
+
+  // Virtual Reality Module
+  if (lowerCaseMessage.includes("glasses") || lowerCaseMessage.includes("virtual reality") || lowerCaseMessage.includes("vr")) {
+    return "Virtual Reality (VR) transports you to another world! I will teach you how sensors track your head movements and how 3D holograms are projected right in front of your eyes to look completely real.";
+  }
+
+  // Laptop/Computer Module
+  if (lowerCaseMessage.includes("laptop") || lowerCaseMessage.includes("computer")) {
+    return "A laptop consists of a motherboard, RAM, and a storage drive. I will teach you how to choose the right specs for your workflow and how to maintain it.";
+  }
+
+  // Cooking Module
+  if (lowerCaseMessage.includes("cook") || lowerCaseMessage.includes("recipe") || lowerCaseMessage.includes("cooking")) {
+    return "Cooking is both an art and chemistry! Today we will learn the basics of chopping vegetables and mixing spices. I will write the ingredients for a healthy and delicious recipe on the whiteboard for you.";
+  }
+
+  // School & University Module
+  if (lowerCaseMessage.includes("school") || lowerCaseMessage.includes("university") || lowerCaseMessage.includes("math")) {
+    return "From elementary school to university, I am here to simplify science. Look at the whiteboard, I have drawn a graph explaining differential equations just as we need for today's curriculum.";
+  }
+
+  // Driving Module
+  if (lowerCaseMessage.includes("car") || lowerCaseMessage.includes("driving") || lowerCaseMessage.includes("drive")) {
+    return "Driving a car requires focus. We will learn the theory of how an internal combustion engine works, basic traffic rules, and when to use the brakes safely.";
+  }
+
+  // Sports & Exercise Module
+  if (lowerCaseMessage.includes("sport") || lowerCaseMessage.includes("exercise") || lowerCaseMessage.includes("workout")) {
+    return "A healthy mind in a healthy body! I will schedule a daily workout routine for you, starting with a warm-up, followed by resistance training. I will also explain the correct posture to avoid injuries.";
+  }
+
+  // Default Fallback Response
+  return "Welcome to my interactive classroom! I am your CHAT Robot. You can ask me about programming, smartphones, VR glasses, cooking, school subjects, driving, or sports. What would you like to learn today?";
+};
+// MainScreen.js
+import React, { useState, useCallback, useEffect } from 'react';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, Text } from 'react-native';
+import { GiftedChat, Bubble } from 'react-native-gifted-chat';
+import RobotScene from './RobotScene';
+import { analyzeUserMessage } from './TeacherLogic';
+
+export default function MainScreen() {
+  const [messages, setMessages] = useState([]);
+
+  useEffect(() => {
+    // Initial Welcome Message from the Robot Teacher
+    setMessages([
+      {
+        _id: 1,
+        text: 'Hello! I am CHAT Robot, your comprehensive teacher in this room. I am ready to teach you programming, cooking, driving, or even university subjects. Go ahead, what shall we learn today?',
+        createdAt: new Date(),
+        user: {
+          _id: 2,
+          name: 'Robot Teacher',
+          avatar: 'https://i.pravatar.cc/150?img=12', // Placeholder avatar
+        },
+      },
+    ]);
+  }, []);
+
+  const onSend = useCallback((newMessages = []) => {
+    // Append the user's message to the chat UI
+    setMessages(previousMessages => GiftedChat.append(previousMessages, newMessages));
+
+    const userText = newMessages[0].text;
+    
+    // Analyze the text and get the robot's reply
+    const botReplyText = analyzeUserMessage(userText);
+
+    const botMessage = {
+      _id: Math.round(Math.random() * 1000000),
+      text: botReplyText,
+      createdAt: new Date(),
+      user: {
+        _id: 2,
+        name: 'Robot Teacher',
+        avatar: 'https://i.pravatar.cc/150?img=12',
+      },
+    };
+
+    // Simulate thinking delay (1.5 seconds)
+    setTimeout(() => {
+      setMessages(previousMessages => GiftedChat.append(previousMessages, [botMessage]));
+    }, 1500);
+  }, []);
+
+  // Customize Chat Bubble Colors
+  const renderBubble = (props) => {
+    return (
+      <Bubble
+        {...props}
+        wrapperStyle={{
+          right: { backgroundColor: '#007AFF' }, // User bubble color (Blue)
+          left: { backgroundColor: '#E5E5EA' }  // Robot bubble color (Light Gray)
+        }}
+        textStyle={{
+          right: { color: '#fff', fontFamily: 'System' },
+          left: { color: '#000', fontFamily: 'System' }
+        }}
+      />
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Top Section: 3D Scene */}
+      <View style={styles.sceneContainer}>
+        <RobotScene />
+        <View style={styles.statusBadge}>
+          <Text style={styles.statusText}>● Robot is online & listening</Text>
+        </View>
+      </View>
+
+      {/* Bottom Section: Chat Interface */}
+      <KeyboardAvoidingView 
+        style={styles.chatContainer} 
+        behavior={Platform.OS === 'ios' ? 'padding' : null}
+      >
+        <GiftedChat
+          messages={messages}
+          onSend={messages => onSend(messages)}
+          user={{ _id: 1 }}
+          renderBubble={renderBubble}
+          placeholder="Chat with your Robot Teacher..."
+          alwaysShowSend
+        />
+      </KeyboardAvoidingView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#1E1E1E',
+  },
+  sceneContainer: {
+    flex: 0.45, // 45% of the screen height
+    backgroundColor: '#000',
+    borderBottomWidth: 2,
+    borderBottomColor: '#333',
+    position: 'relative',
+  },
+  statusBadge: {
+    position: 'absolute',
+    top: 40,
+    left: 20,
+    backgroundColor: 'rgba(0, 255, 0, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: '#00FF00',
+  },
+  statusText: {
+    color: '#00FF00',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  chatContainer: {
+    flex: 0.55, // 55% of the screen height
+    backgroundColor: '#ffffff',
+  },
+});
+// App.js
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import MainScreen from './MainScreen';
+import { StatusBar } from 'react-native';
+
+const Stack = createStackNavigator();
+
+export default function App() {
+  return (
+    <NavigationContainer>
+      <StatusBar barStyle="light-content" />
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Home" component={MainScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
+// MainScreen.js
+import React, { useState, useCallback, useEffect } from 'react';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, Text } from 'react-native';
+import { GiftedChat, Bubble } from 'react-native-gifted-chat';
+import RobotScene from './RobotScene';
+import { analyzeUserMessage } from './TeacherLogic';
+
+export default function MainScreen() {
+  const [messages, setMessages] = useState([]);
+
+  useEffect(() => {
+    // Initial Welcome Message from the Robot Teacher
+    setMessages([
+      {
+        _id: 1,
+        text: 'Hello! I am CHAT Robot, your comprehensive teacher in this room. I am ready to teach you programming, cooking, driving, or even university subjects. Go ahead, what shall we learn today?',
+        createdAt: new Date(),
+        user: {
+          _id: 2,
+          name: 'Robot Teacher',
+          avatar: 'https://i.pravatar.cc/150?img=12', // Placeholder avatar
+        },
+      },
+    ]);
+  }, []);
+
+  const onSend = useCallback((newMessages = []) => {
+    // Append the user's message to the chat UI
+    setMessages(previousMessages => GiftedChat.append(previousMessages, newMessages));
+
+    const userText = newMessages[0].text;
+    
+    // Analyze the text and get the robot's reply
+    const botReplyText = analyzeUserMessage(userText);
+
+    const botMessage = {
+      _id: Math.round(Math.random() * 1000000),
+      text: botReplyText,
+      createdAt: new Date(),
+      user: {
+        _id: 2,
+        name: 'Robot Teacher',
+        avatar: 'https://i.pravatar.cc/150?img=12',
+      },
+    };
+
+    // Simulate thinking delay (1.5 seconds)
+    setTimeout(() => {
+      setMessages(previousMessages => GiftedChat.append(previousMessages, [botMessage]));
+    }, 1500);
+  }, []);
+
+  // Customize Chat Bubble Colors
+  const renderBubble = (props) => {
+    return (
+      <Bubble
+        {...props}
+        wrapperStyle={{
+          right: { backgroundColor: '#007AFF' }, // User bubble color (Blue)
+          left: { backgroundColor: '#E5E5EA' }  // Robot bubble color (Light Gray)
+        }}
+        textStyle={{
+          right: { color: '#fff', fontFamily: 'System' },
+          left: { color: '#000', fontFamily: 'System' }
+        }}
+      />
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Top Section: 3D Scene */}
+      <View style={styles.sceneContainer}>
+        <RobotScene />
+        <View style={styles.statusBadge}>
+          <Text style={styles.statusText}>● Robot is online & listening</Text>
+        </View>
+      </View>
+
+      {/* Bottom Section: Chat Interface */}
+      <KeyboardAvoidingView 
+        style={styles.chatContainer} 
+        behavior={Platform.OS === 'ios' ? 'padding' : null}
+      >
+        <GiftedChat
+          messages={messages}
+          onSend={messages => onSend(messages)}
+          user={{ _id: 1 }}
+          renderBubble={renderBubble}
+          placeholder="Chat with your Robot Teacher..."
+          alwaysShowSend
+        />
+      </KeyboardAvoidingView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#1E1E1E',
+  },
+  sceneContainer: {
+    flex: 0.45, // 45% of the screen height
+    backgroundColor: '#000',
+    borderBottomWidth: 2,
+    borderBottomColor: '#333',
+    position: 'relative',
+  },
+  statusBadge: {
+    position: 'absolute',
+    top: 40,
+    left: 20,
+    backgroundColor: 'rgba(0, 255, 0, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: '#00FF00',
+  },
+  statusText: {
+    color: '#00FF00',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  chatContainer: {
+    flex: 0.55, // 55% of the screen height
+    backgroundColor: '#ffffff',
+  },
+});
